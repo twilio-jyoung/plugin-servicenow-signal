@@ -11,7 +11,7 @@ exports.handler = function(context, event, callback) {
   response.appendHeader("Access-Control-Allow-Headers", "Content-Type");
 
   got
-    .post(context.ServiceNowScriptedAPIRootURL + "status_v2", {
+    .post(context.ServiceNowScriptedAPIRootURL + "status", {
       body: JSON.stringify(event),
       headers: {
         "Accept": "application/json",
