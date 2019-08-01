@@ -1,0 +1,663 @@
+{
+  "description": "Bot flow for creating a Flex messaging task",
+  "states": [
+    {
+      "type": "InitialState",
+      "name": "Trigger",
+      "properties": {
+        "offset": {
+          "x": 0,
+          "y": -10
+        },
+        "flow_url": "https://webhooks.twilio.com/v1/Accounts/AC422d6fe5a5ab65deb1bd7b034cf82653/Flows/FW1c094dfc64ef19e5aa21a5fd8bef36c8"
+      },
+      "transitions": [
+        {
+          "event": "incomingMessage",
+          "conditions": [],
+          "next": "FF06f0656de131afd87fa7fc0382231fa5",
+          "uuid": "6424672a-ed9a-49a4-b2e8-ecbefb666d0e"
+        },
+        {
+          "event": "incomingCall",
+          "conditions": [],
+          "next": null,
+          "uuid": "4d0111ba-26d8-48f0-a1fc-2ab9089d0ed5"
+        },
+        {
+          "event": "incomingRequest",
+          "conditions": [],
+          "next": null,
+          "uuid": "26546380-f5cc-4307-af60-f8804cad5b3f"
+        }
+      ],
+      "sid": "FFab9ae65d53ef52f4b01ab7e531bcfef6"
+    },
+    {
+      "type": "SendToFlex",
+      "name": "SendMessageToAgent",
+      "properties": {
+        "offset": {
+          "x": 480,
+          "y": 3750
+        },
+        "workflow": "WW8db0ade0fb7e08321ba46fd72b56dae0",
+        "channel": "TCf40e25ab00d9b1d48fe3152a0a70f3d6",
+        "attributes": "{\n\t\"name\":\"{{widgets.GetUserFromPhone.parsed.result.name}}\",\n\t\"channelType\":\"{{trigger.message.ChannelAttributes.channel_type}}\",\n\t\"channelSid\":\"{{trigger.message.ChannelSid}}\",\n\t\"user_sys_id\":\"{{widgets.GetUserFromPhone.parsed.result.sys_id}}\",\n\t\"ticket_number\":\"{{flow.variables.TicketNumber}}\",\n\t\"user\":{\n\t\t\"name\":\"{{widgets.GetUserFromPhone.parsed.result.name}}\",\n    \"phone\": \"{{trigger.message.ChannelAttributes.from}}\",\n\t\t\"title\":\"{{widgets.GetUserFromPhone.parsed.result.title}}\",\n\t\t\"department\":\"{{widgets.GetUserFromPhone.parsed.result.department}}\",\n\t\t\"location\":\"{{widgets.GetUserFromPhone.parsed.result.location}}\"\n\t}\n}",
+        "timeout": null,
+        "priority": null,
+        "waitUrl": null,
+        "waitUrlMethod": null
+      },
+      "transitions": [
+        {
+          "event": "callComplete",
+          "conditions": [],
+          "next": null,
+          "uuid": "19de27cf-ad5e-46b5-91ba-d64d5d4add5c"
+        },
+        {
+          "event": "failedToEnqueue",
+          "conditions": [],
+          "next": null,
+          "uuid": "2d277bb5-f306-4f0f-b757-af51edcbef61"
+        },
+        {
+          "event": "callFailure",
+          "conditions": [],
+          "next": null,
+          "uuid": "8ab14cb3-fdf6-4c82-9c04-88f310073a37"
+        }
+      ],
+      "sid": "FF498999b24cd5fc37583fcd5cbd463886"
+    },
+    {
+      "type": "Function",
+      "name": "GetUserFromPhone",
+      "properties": {
+        "offset": {
+          "x": 0,
+          "y": 200
+        },
+        "url": "https://twil.io/get_user",
+        "timeout": null,
+        "parameters": [
+          {
+            "key": "From",
+            "value": "{{trigger.message.ChannelAttributes.from}}"
+          }
+        ]
+      },
+      "transitions": [
+        {
+          "event": "success",
+          "conditions": [],
+          "next": "FF8ac35dfd85b49d171fd334724995976b",
+          "uuid": "23d06768-ef89-4b77-8d65-f3f396f94c13"
+        },
+        {
+          "event": "fail",
+          "conditions": [],
+          "next": "FF498999b24cd5fc37583fcd5cbd463886",
+          "uuid": "ba5af87d-127b-400d-aad1-9c76c22afcf7"
+        }
+      ],
+      "sid": "FF06f0656de131afd87fa7fc0382231fa5"
+    },
+    {
+      "type": "Branch",
+      "name": "NumberOfTickets",
+      "properties": {
+        "offset": {
+          "x": -530,
+          "y": 450
+        },
+        "input": "{{widgets.GetUserFromPhone.parsed.num_tickets}}"
+      },
+      "transitions": [
+        {
+          "event": "noMatch",
+          "conditions": [],
+          "next": "FF498999b24cd5fc37583fcd5cbd463886",
+          "uuid": "564fb23b-c2f7-4209-bea3-84e82426b9db"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "No Tickets",
+              "type": "equal_to",
+              "arguments": ["{{widgets.GetUserFromPhone.parsed.num_tickets}}"],
+              "value": "0"
+            }
+          ],
+          "next": "FF498999b24cd5fc37583fcd5cbd463886",
+          "uuid": "d51428c6-d381-48cc-a4fa-2040a4efe02d"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "Has Tickets",
+              "type": "not_equal_to",
+              "arguments": ["{{widgets.GetUserFromPhone.parsed.num_tickets}}"],
+              "value": "0"
+            }
+          ],
+          "next": "FFd8c3db440448168a73afb26a79018883",
+          "uuid": "d0ec487d-dcc5-4cbb-a21d-bc240711160a"
+        }
+      ],
+      "sid": "FF8ac35dfd85b49d171fd334724995976b"
+    },
+    {
+      "type": "MessagePrompt",
+      "name": "CallType",
+      "properties": {
+        "offset": {
+          "x": -610,
+          "y": 820
+        },
+        "body": "Hello {{widgets.GetUserFromPhone.parsed.result.first_name}}, \nPlease reply 1 if you are inquiring about an existing issue or reply 2 if you would like to chat with an agent about a new issue",
+        "from": "{{flow.channel.address}}",
+        "timeout": 3600,
+        "save_response_as": null,
+        "media_url": null,
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "attributes": null
+      },
+      "transitions": [
+        {
+          "event": "incomingMessage",
+          "conditions": [],
+          "next": "FFe774dc77978e265796a76b01606e8c91",
+          "uuid": "eba5f8f5-5b47-4718-9393-6c089f74a500"
+        },
+        {
+          "event": "timeout",
+          "conditions": [],
+          "next": null,
+          "uuid": "7750f3b3-8deb-4481-b549-f8d9755f2863"
+        },
+        {
+          "event": "deliveryFailure",
+          "conditions": [],
+          "next": null,
+          "uuid": "bbc3de60-6196-4e3d-8a8c-6140d601b7b7"
+        }
+      ],
+      "sid": "FFd8c3db440448168a73afb26a79018883"
+    },
+    {
+      "type": "Branch",
+      "name": "split_2",
+      "properties": {
+        "offset": {
+          "x": -749,
+          "y": 1073
+        },
+        "input": "{{widgets.CallType.inbound.Body}}"
+      },
+      "transitions": [
+        {
+          "event": "noMatch",
+          "conditions": [],
+          "next": null,
+          "uuid": "4c7d0f76-968d-43b1-af9e-0796098db936"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "Existing Ticket",
+              "type": "equal_to",
+              "arguments": ["{{widgets.CallType.inbound.Body}}"],
+              "value": "1"
+            }
+          ],
+          "next": "FFa6f7589da9d8cb59a9262079052ba622",
+          "uuid": "1f858ff5-458f-47a3-85cf-bea422922547"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "New Ticket",
+              "type": "equal_to",
+              "arguments": ["{{widgets.CallType.inbound.Body}}"],
+              "value": "2"
+            }
+          ],
+          "next": "FF498999b24cd5fc37583fcd5cbd463886",
+          "uuid": "09ba61ba-6fcd-430c-92e5-44b33182df4b"
+        }
+      ],
+      "sid": "FFe774dc77978e265796a76b01606e8c91"
+    },
+    {
+      "type": "Branch",
+      "name": "NumberOfTickets2",
+      "properties": {
+        "offset": {
+          "x": -970,
+          "y": 1340
+        },
+        "input": "{{widgets.GetUserFromPhone.parsed.result.num_tickets}}"
+      },
+      "transitions": [
+        {
+          "event": "noMatch",
+          "conditions": [],
+          "next": null,
+          "uuid": "5c3a4c34-50b2-4023-a23f-e695df65f30b"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1 Ticket",
+              "type": "equal_to",
+              "arguments": ["{{widgets.GetUserFromPhone.parsed.result.num_tickets}}"],
+              "value": "1"
+            }
+          ],
+          "next": "FF1f45e601fd558cbc2c2f0e4bc210965c",
+          "uuid": "f187c4bf-1814-42c4-925a-5bc8a333b924"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "More than 1 Ticket",
+              "type": "not_equal_to",
+              "arguments": ["{{widgets.GetUserFromPhone.parsed.result.num_tickets}}"],
+              "value": "1"
+            }
+          ],
+          "next": "FF0c6f8d1a00dcf2fdfe56ca2bf5f3c120",
+          "uuid": "d07e12aa-f2c7-48f2-8808-ae91843b303c"
+        }
+      ],
+      "sid": "FFa6f7589da9d8cb59a9262079052ba622"
+    },
+    {
+      "type": "MessagePrompt",
+      "name": "GiveTicketOptions",
+      "properties": {
+        "offset": {
+          "x": -690,
+          "y": 1600
+        },
+        "body": "It looks like you have a few tickets open which would you like more information about?\n{% for i in (1..widgets.GetUserFromPhone.parsed.result.num_tickets) %}\nReply {{i}} for  {{widgets.GetUserFromPhone.parsed.result.tickets[forloop.index0].short_description}} \n{% endfor %}",
+        "from": "{{flow.channel.address}}",
+        "timeout": 3600,
+        "save_response_as": null,
+        "media_url": null,
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "attributes": null
+      },
+      "transitions": [
+        {
+          "event": "incomingMessage",
+          "conditions": [],
+          "next": "FF1f45e601fd558cbc2c2f0e4bc210965c",
+          "uuid": "b61a1e38-3240-4822-8771-cedf7399379a"
+        },
+        {
+          "event": "timeout",
+          "conditions": [],
+          "next": null,
+          "uuid": "d48fce73-44a4-4c5c-825e-e34583af98c4"
+        },
+        {
+          "event": "deliveryFailure",
+          "conditions": [],
+          "next": null,
+          "uuid": "a995f62b-a33b-4746-adb8-c520183f707f"
+        }
+      ],
+      "sid": "FF0c6f8d1a00dcf2fdfe56ca2bf5f3c120"
+    },
+    {
+      "type": "SetVariables",
+      "name": "SetTicketIndex",
+      "properties": {
+        "offset": {
+          "x": -864,
+          "y": 1872
+        },
+        "variables": [
+          {
+            "value": "{% if widgets. GetUserFromPhone.parsed.result.num_tickets == 1%}0{% else %}{% assign var1 = widgets.GiveTicketOptions.inbound.Body | minus: 1 %}{{var1}}{% endif %}",
+            "key": "ticketIndex"
+          },
+          {
+            "key": "TicketOnHold",
+            "value": "{% if widgets. \nGetUserTickets.parsed.result.num_tickets == 1%}{{widgets.GetUserFromPhone.parsed.result.tickets[0].state =='On Hold'}}{% else %}{% assign var1 = widgets.GiveTicketOptions.inbound.Body | minus: 1 %}{{widgets.GetUserFromPhone.parsed.result.tickets[var1].state =='On Hold'}}{% endif %}",
+            "index": "1"
+          },
+          {
+            "key": "TicketNumber",
+            "value": "{% if widgets. \nGetUserTickets.parsed.result.num_tickets == 1%}{{widgets.GetUserFromPhone.parsed.result.tickets[0].number}}{% else %}{% assign var1 = widgets.GiveTicketOptions.inbound.Body  | minus: 1 %}{{widgets.GetUserFromPhone.parsed.result.tickets[var1].number}}{% endif %}",
+            "index": "2"
+          }
+        ]
+      },
+      "transitions": [
+        {
+          "event": "next",
+          "conditions": [],
+          "next": "FF80dfef7c999bfdfc59aab270a42db6aa",
+          "uuid": "0a1f0c1e-2eb4-443c-8f6d-db897633d0c2"
+        }
+      ],
+      "sid": "FF1f45e601fd558cbc2c2f0e4bc210965c"
+    },
+    {
+      "type": "Branch",
+      "name": "TicketOnHold",
+      "properties": {
+        "offset": {
+          "x": -860,
+          "y": 2100
+        },
+        "input": "{{flow.variables.TicketOnHold}}"
+      },
+      "transitions": [
+        {
+          "event": "noMatch",
+          "conditions": [],
+          "next": null,
+          "uuid": "653730eb-ae25-4c8e-8d41-3da95330f746"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "Not on Hold",
+              "type": "equal_to",
+              "arguments": ["{{flow.variables.TicketOnHold}}"],
+              "value": "false"
+            }
+          ],
+          "next": "FF871ea0d1f54c815ba8fdfa6ae96e2ab0",
+          "uuid": "0d391340-e5b8-4de7-a201-a8af3818201a"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "On Hold",
+              "type": "equal_to",
+              "arguments": ["{{flow.variables.TicketOnHold}}"],
+              "value": "true"
+            }
+          ],
+          "next": "FF4e6fb8a136219db2ee0ca9cf8bddd1b6",
+          "uuid": "e8f30e7c-3e3d-4051-a678-8ea0b6fac207"
+        }
+      ],
+      "sid": "FF80dfef7c999bfdfc59aab270a42db6aa"
+    },
+    {
+      "type": "Message",
+      "name": "send_message_1",
+      "properties": {
+        "offset": {
+          "x": -1040,
+          "y": 2390
+        },
+        "body": "{% assign var_index = flow.variables.ticketIndex| minus: 0 %}\nYour ticket is currently {{widgets.GetUserFromPhone.parsed.result.tickets[var_index].state}} and has a priority of {{widgets.GetUserFromPhone.parsed.result.tickets[var_index].priority}}",
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "media_url": null,
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "attributes": null
+      },
+      "transitions": [
+        {
+          "event": "sent",
+          "conditions": [],
+          "next": "FF62fedfd2b9217ae11b619be21362e16d",
+          "uuid": "c72605d7-b674-4dc9-8038-e3bf34798969"
+        },
+        {
+          "event": "failed",
+          "conditions": [],
+          "next": null,
+          "uuid": "00afe160-167b-4315-b20b-7ec1b5aa1729"
+        }
+      ],
+      "sid": "FF871ea0d1f54c815ba8fdfa6ae96e2ab0"
+    },
+    {
+      "type": "MessagePrompt",
+      "name": "GetOnHoldResponse",
+      "properties": {
+        "offset": {
+          "x": -600,
+          "y": 2390
+        },
+        "body": "{% assign var_index = flow.variables.ticketIndex| minus: 0 %}\nYour ticket is currently {{widgets.GetUserFromPhone.parsed.result.tickets[var_index].state}} and has a priority of {{widgets.GetUserFromPhone.parsed.result.tickets[var_index].priority}}. The last comment from the technician was {{widgets.GetUserFromPhone.parsed.result.tickets[var_index].last_comment}}. Please respond with your response to this comment or NO, to not leave a response",
+        "from": "{{flow.channel.address}}",
+        "timeout": 3600,
+        "save_response_as": null,
+        "media_url": null,
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "attributes": null
+      },
+      "transitions": [
+        {
+          "event": "incomingMessage",
+          "conditions": [],
+          "next": "FF19dfb5be11619178808009e847c56fa3",
+          "uuid": "24d74b66-3060-4e27-b029-370d40cf3fdc"
+        },
+        {
+          "event": "timeout",
+          "conditions": [],
+          "next": null,
+          "uuid": "cac2d5ca-07d7-4e53-82a0-6c2283ef468f"
+        },
+        {
+          "event": "deliveryFailure",
+          "conditions": [],
+          "next": null,
+          "uuid": "5468c652-6911-4914-a2fe-72c5b273570e"
+        }
+      ],
+      "sid": "FF4e6fb8a136219db2ee0ca9cf8bddd1b6"
+    },
+    {
+      "type": "Branch",
+      "name": "Repsponse",
+      "properties": {
+        "offset": {
+          "x": -590,
+          "y": 2640
+        },
+        "input": "{{widgets.GetOnHoldResponse.inbound.Body}}"
+      },
+      "transitions": [
+        {
+          "event": "noMatch",
+          "conditions": [],
+          "next": null,
+          "uuid": "15247e2e-70da-46fc-a42e-cdc432368c05"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "No Response",
+              "type": "equal_to",
+              "arguments": ["{{widgets.GetOnHoldResponse.inbound.Body}}"],
+              "value": "No"
+            }
+          ],
+          "next": "FF62fedfd2b9217ae11b619be21362e16d",
+          "uuid": "8c97caf3-c58a-4c3e-bbce-c85edd5f5dc9"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "User added response",
+              "type": "not_equal_to",
+              "arguments": ["{{widgets.GetOnHoldResponse.inbound.Body}}"],
+              "value": "No"
+            }
+          ],
+          "next": "FF8086ee5f93ebb13e17a788a60380d647",
+          "uuid": "badc95a4-0d69-40d7-8ad8-746f266522b5"
+        }
+      ],
+      "sid": "FF19dfb5be11619178808009e847c56fa3"
+    },
+    {
+      "type": "MessagePrompt",
+      "name": "PlayThanks",
+      "properties": {
+        "offset": {
+          "x": -1040,
+          "y": 3380
+        },
+        "body": "Please reply agent if you would still like to speak with an agent about this issue",
+        "from": "{{flow.channel.address}}",
+        "timeout": 3600,
+        "save_response_as": null,
+        "media_url": null,
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "attributes": null
+      },
+      "transitions": [
+        {
+          "event": "incomingMessage",
+          "conditions": [],
+          "next": "FF698c0c67a8a8c2db779c1cc17c34bcf7",
+          "uuid": "6c0a6b87-d527-429c-9f51-9574a8a94b46"
+        },
+        {
+          "event": "timeout",
+          "conditions": [],
+          "next": null,
+          "uuid": "31e46140-6950-436e-8b14-73ee28dfeb1a"
+        },
+        {
+          "event": "deliveryFailure",
+          "conditions": [],
+          "next": null,
+          "uuid": "5fcb0a5b-2a7a-4303-858e-19fe64d8c2b3"
+        }
+      ],
+      "sid": "FF62fedfd2b9217ae11b619be21362e16d"
+    },
+    {
+      "type": "Function",
+      "name": "AddCommentToTicket",
+      "properties": {
+        "offset": {
+          "x": -350,
+          "y": 2880
+        },
+        "url": "https://twil.io/add_comment",
+        "timeout": null,
+        "parameters": [
+          {
+            "key": "ticketNumber",
+            "value": "{{flow.variables.TicketNumber}}"
+          },
+          {
+            "key": "comment",
+            "value": "{{widgets.GetOnHoldResponse.inbound.Body}}"
+          }
+        ]
+      },
+      "transitions": [
+        {
+          "event": "success",
+          "conditions": [],
+          "next": "FF9ceb4331466aa2fe44a8e28ff85ec841",
+          "uuid": "1c639615-b576-477d-82dc-09b3cc410b2d"
+        },
+        {
+          "event": "fail",
+          "conditions": [],
+          "next": null,
+          "uuid": "b47c3c87-0428-49f5-bb55-3bcf80caa810"
+        }
+      ],
+      "sid": "FF8086ee5f93ebb13e17a788a60380d647"
+    },
+    {
+      "type": "Message",
+      "name": "MessageConfirmation",
+      "properties": {
+        "offset": {
+          "x": -340,
+          "y": 3130
+        },
+        "body": "Thank you, this message will be added to the ticket.",
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "media_url": null,
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "attributes": null
+      },
+      "transitions": [
+        {
+          "event": "sent",
+          "conditions": [],
+          "next": "FF62fedfd2b9217ae11b619be21362e16d",
+          "uuid": "20065b78-ddde-4cf8-9be1-af65213c347b"
+        },
+        {
+          "event": "failed",
+          "conditions": [],
+          "next": null,
+          "uuid": "3a7c23e4-eb7f-4390-8616-30545924e660"
+        }
+      ],
+      "sid": "FF9ceb4331466aa2fe44a8e28ff85ec841"
+    },
+    {
+      "type": "Branch",
+      "name": "SplitThanks",
+      "properties": {
+        "offset": {
+          "x": -1020,
+          "y": 3680
+        },
+        "input": "{{widgets.PlayThanks.inbound.Body}}"
+      },
+      "transitions": [
+        {
+          "event": "noMatch",
+          "conditions": [],
+          "next": null,
+          "uuid": "f611d0f2-c5ae-4b80-a75a-cc447247b700"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "If value contains agent",
+              "type": "contains",
+              "arguments": ["{{widgets.PlayThanks.inbound.Body}}"],
+              "value": "agent"
+            }
+          ],
+          "next": "FF498999b24cd5fc37583fcd5cbd463886",
+          "uuid": "1b1717f5-0f75-449a-8586-6c50b988a81e"
+        }
+      ],
+      "sid": "FF698c0c67a8a8c2db779c1cc17c34bcf7"
+    }
+  ]
+}

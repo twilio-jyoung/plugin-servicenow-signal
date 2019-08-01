@@ -1,0 +1,731 @@
+{
+  "description": "IVR for creating a Flex voice task",
+  "states": [
+    {
+      "type": "InitialState",
+      "name": "Trigger",
+      "properties": {
+        "offset": {
+          "x": 10,
+          "y": -20
+        },
+        "flow_url": "https://webhooks.twilio.com/v1/Accounts/AC422d6fe5a5ab65deb1bd7b034cf82653/Flows/FW8cb5760699fa96e5d88ce4ef972d10a3"
+      },
+      "transitions": [
+        {
+          "event": "incomingMessage",
+          "conditions": [],
+          "next": null,
+          "uuid": "70ac5cef-0549-42a3-a843-b002ba92feb2"
+        },
+        {
+          "event": "incomingCall",
+          "conditions": [],
+          "next": "FF94cd8ef9e200ba4992d3f86518cb370f",
+          "uuid": "7e389216-99c8-4929-add8-1ab1b3cbc74a"
+        },
+        {
+          "event": "incomingRequest",
+          "conditions": [],
+          "next": null,
+          "uuid": "b885f58d-1208-4c67-93a2-10e93a51fa32"
+        }
+      ],
+      "sid": "FF22ce5cfb518331274777d69ebbb04b5e"
+    },
+    {
+      "type": "SendToFlex",
+      "name": "SendCallToAgent",
+      "properties": {
+        "offset": {
+          "x": 520,
+          "y": 4140
+        },
+        "workflow": "WW8db0ade0fb7e08321ba46fd72b56dae0",
+        "channel": "TCa43ede141ff3137b8e3f9bf65563d62e",
+        "attributes": "{ \"type\": \"inbound\", \"name\": \"{{widgets.GetUserFromPhone.parsed.result.name}}\", \"user_sys_id\": \"{{widgets.GetUserFromPhone.parsed.result.sys_id}}\",\"ticket_number\": \"{{flow.variables.TicketNumber}}\"}",
+        "timeout": null,
+        "priority": null,
+        "waitUrl": null,
+        "waitUrlMethod": null
+      },
+      "transitions": [
+        {
+          "event": "callComplete",
+          "conditions": [],
+          "next": null,
+          "uuid": "18bd5e97-3921-4e30-8f79-116151a85469"
+        },
+        {
+          "event": "failedToEnqueue",
+          "conditions": [],
+          "next": null,
+          "uuid": "e85857d8-60ea-47e3-988c-0be8650d0206"
+        },
+        {
+          "event": "callFailure",
+          "conditions": [],
+          "next": null,
+          "uuid": "098edac2-0da9-40bc-a9a3-16a2af80427a"
+        }
+      ],
+      "sid": "FFdf570154bfbd9e7badca73a4674919f8"
+    },
+    {
+      "type": "Function",
+      "name": "GetUserFromPhone",
+      "properties": {
+        "offset": {
+          "x": 150,
+          "y": 180
+        },
+        "url": "https://twil.io/get_user",
+        "timeout": null,
+        "parameters": [
+          {
+            "key": "From",
+            "value": "{{trigger.call.From}}"
+          }
+        ]
+      },
+      "transitions": [
+        {
+          "event": "success",
+          "conditions": [],
+          "next": "FF3bb3781eef2f1a849bf0873d041e6ddf",
+          "uuid": "0e574f9a-d988-48d5-a121-6d6be7d53fee"
+        },
+        {
+          "event": "fail",
+          "conditions": [],
+          "next": "FFdf570154bfbd9e7badca73a4674919f8",
+          "uuid": "3843c8e1-d8a4-4ca9-872f-47c7a5ac2efe"
+        }
+      ],
+      "sid": "FF94cd8ef9e200ba4992d3f86518cb370f"
+    },
+    {
+      "type": "Gather",
+      "name": "CallType",
+      "properties": {
+        "offset": {
+          "x": -630,
+          "y": 620
+        },
+        "timeout": 5,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "number_of_digits": 1,
+        "save_response_as": null,
+        "say": "<speak>Hello {{widgets.GetUserFromPhone.parsed.result.first_name}}, Please press 1 if you are calling about an existing issue <break time=\"500ms\"/> or press 2 if you would like to speak to an agent about a new issue <break time=\"5s\"/>I missed That, lets try again<break time=\"500ms\"/>  </speak>",
+        "play": null,
+        "voice": "Polly.Salli",
+        "language": "en-US",
+        "loop": 1,
+        "hints": null,
+        "gather_language": "en"
+      },
+      "transitions": [
+        {
+          "event": "keypress",
+          "conditions": [],
+          "next": "FFf1c2debdda78e6d5e3330dc00494aaab",
+          "uuid": "55dc13d5-995e-481b-b8ca-98df4f98014c"
+        },
+        {
+          "event": "speech",
+          "conditions": [],
+          "next": null,
+          "uuid": "0ac51932-c856-4b63-9293-a1c804147f0d"
+        },
+        {
+          "event": "timeout",
+          "conditions": [],
+          "next": null,
+          "uuid": "5b9873c3-4eb6-491e-9e7d-00aacd8d9c2b"
+        }
+      ],
+      "sid": "FF51c953ebc0d5e49da029a8e10a39b61c"
+    },
+    {
+      "type": "Branch",
+      "name": "CallTypeSplit",
+      "properties": {
+        "offset": {
+          "x": -630,
+          "y": 850
+        },
+        "input": "{{widgets.CallType.Digits}}"
+      },
+      "transitions": [
+        {
+          "event": "noMatch",
+          "conditions": [],
+          "next": "FFdf570154bfbd9e7badca73a4674919f8",
+          "uuid": "32ea2611-927f-4c60-b9db-2e3865036330"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "New Issue",
+              "type": "equal_to",
+              "arguments": ["{{widgets.CallType.Digits}}"],
+              "value": "2"
+            }
+          ],
+          "next": "FFdf570154bfbd9e7badca73a4674919f8",
+          "uuid": "a13bf9ca-0548-4697-a844-b5f918a8c29a"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "Existing Issue",
+              "type": "equal_to",
+              "arguments": ["{{widgets.CallType.Digits}}"],
+              "value": "1"
+            }
+          ],
+          "next": "FF825012a4fa1214f57229fbb133608aa0",
+          "uuid": "f48a477b-9837-4e8f-aab5-709998b84430"
+        }
+      ],
+      "sid": "FFf1c2debdda78e6d5e3330dc00494aaab"
+    },
+    {
+      "type": "Branch",
+      "name": "NumberOfTickets",
+      "properties": {
+        "offset": {
+          "x": -230,
+          "y": 420
+        },
+        "input": "{{widgets.GetUserFromPhone.parsed.result.num_tickets}}"
+      },
+      "transitions": [
+        {
+          "event": "noMatch",
+          "conditions": [],
+          "next": "FFdf570154bfbd9e7badca73a4674919f8",
+          "uuid": "7802c937-d0a0-4c9f-bb91-d25b8bdd02b4"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "No Tickets",
+              "type": "equal_to",
+              "arguments": ["{{widgets.GetUserFromPhone.parsed.result.num_tickets}}"],
+              "value": "0"
+            }
+          ],
+          "next": "FFdf570154bfbd9e7badca73a4674919f8",
+          "uuid": "478c6489-b9c7-400e-bd52-c1ad34384ff5"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "Greater than 1 Ticket",
+              "type": "not_equal_to",
+              "arguments": ["{{widgets.GetUserFromPhone.parsed.result.num_tickets}}"],
+              "value": "0"
+            }
+          ],
+          "next": "FF51c953ebc0d5e49da029a8e10a39b61c",
+          "uuid": "30c3e2c0-e4e8-4677-bb52-11f980c47d8f"
+        }
+      ],
+      "sid": "FF3bb3781eef2f1a849bf0873d041e6ddf"
+    },
+    {
+      "type": "Branch",
+      "name": "NumberOfTickets2",
+      "properties": {
+        "offset": {
+          "x": -1020,
+          "y": 1280
+        },
+        "input": "{{widgets.GetUserFromPhone.parsed.result.num_tickets}}"
+      },
+      "transitions": [
+        {
+          "event": "noMatch",
+          "conditions": [],
+          "next": null,
+          "uuid": "c05b1567-8a74-446a-89a4-e7eb0ee13bd0"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1 Ticket",
+              "type": "equal_to",
+              "arguments": ["{{widgets.GetUserFromPhone.parsed.result.num_tickets}}"],
+              "value": "1"
+            }
+          ],
+          "next": "FF0939545e75d610f85c06a5f6759e205b",
+          "uuid": "7519379f-ef7b-4b90-8eb2-d91bf08b7065"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "Greater than 1 Ticket",
+              "type": "not_equal_to",
+              "arguments": ["{{widgets.GetUserFromPhone.parsed.result.num_tickets}}"],
+              "value": "1"
+            }
+          ],
+          "next": "FFc2d63f591b4ad6b0a267a3823bb73437",
+          "uuid": "006d039b-9a89-4854-a9d8-f9031e56e005"
+        }
+      ],
+      "sid": "FF825012a4fa1214f57229fbb133608aa0"
+    },
+    {
+      "type": "Gather",
+      "name": "GiveTicketOptions",
+      "properties": {
+        "offset": {
+          "x": -800,
+          "y": 1530
+        },
+        "timeout": 5,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "number_of_digits": 1,
+        "save_response_as": null,
+        "say": "<speak>It looks like you have a few tickets open which would you like more information about?<break time=\"500ms\"/>\n{% for i in (1..widgets.GetUserFromPhone.parsed.result.num_tickets) %}\nPress {{i}} for  {{widgets.GetUserFromPhone.parsed.result.tickets[forloop.index0   ].short_description}} <break time=\"500ms\"/>\n{% endfor %}\n</speak>",
+        "play": null,
+        "voice": "Polly.Salli",
+        "language": "en-US",
+        "loop": 1,
+        "hints": null,
+        "gather_language": "en"
+      },
+      "transitions": [
+        {
+          "event": "keypress",
+          "conditions": [],
+          "next": "FF0939545e75d610f85c06a5f6759e205b",
+          "uuid": "7cbba082-d332-4e63-b628-81d46dd81cac"
+        },
+        {
+          "event": "speech",
+          "conditions": [],
+          "next": null,
+          "uuid": "a37df358-f113-4c6d-b3a2-e2cad85f3f18"
+        },
+        {
+          "event": "timeout",
+          "conditions": [],
+          "next": null,
+          "uuid": "ddfe1633-7a03-4faf-a62c-67b7fd145104"
+        }
+      ],
+      "sid": "FFc2d63f591b4ad6b0a267a3823bb73437"
+    },
+    {
+      "type": "SetVariables",
+      "name": "SetTicketIndex",
+      "properties": {
+        "offset": {
+          "x": -890,
+          "y": 1770
+        },
+        "variables": [
+          {
+            "key": "ticketIndex",
+            "value": "{% if widgets. \nGetUserFromPhone.parsed.result.num_tickets == 1%}0{% else %}{% assign var1 = widgets.GiveTicketOptions.Digits | minus: 1 %}{{var1}}{% endif %}",
+            "index": "0"
+          },
+          {
+            "key": "TicketOnHold",
+            "value": "{% if widgets. \nGetUserTickets.parsed.result.num_tickets == 1%}{{widgets.GetUserFromPhone.parsed.result.tickets[0].state =='On Hold'}}{% else %}{% assign var1 = widgets.GiveTicketOptions.Digits | minus: 1 %}{{widgets.GetUserFromPhone.parsed.result.tickets[var1].state =='On Hold'}}{% endif %}",
+            "index": "1"
+          },
+          {
+            "key": "TicketNumber",
+            "value": "{% if widgets. \nGetUserTickets.parsed.result.num_tickets == 1%}{{widgets.GetUserFromPhone.parsed.result.tickets[0].number}}{% else %}{% assign var1 = widgets.GiveTicketOptions.Digits | minus: 1 %}{{widgets.GetUserFromPhone.parsed.result.tickets[var1].number}}{% endif %}",
+            "index": "2"
+          }
+        ]
+      },
+      "transitions": [
+        {
+          "event": "next",
+          "conditions": [],
+          "next": "FFa90c65db4512d8980219a20478ea5653",
+          "uuid": "4480d462-1698-4ecc-843d-a590e33d9f1e"
+        }
+      ],
+      "sid": "FF0939545e75d610f85c06a5f6759e205b"
+    },
+    {
+      "type": "SayPlay",
+      "name": "say_play_1",
+      "properties": {
+        "offset": {
+          "x": -1080,
+          "y": 2280
+        },
+        "say": "<speak>\n{% assign var_index = flow.variables.ticketIndex| minus: 0 %}\nYour ticket is currently {{widgets.GetUserFromPhone.parsed.result.tickets[var_index].state}} and has a priority of {{widgets.GetUserFromPhone.parsed.result.tickets[var_index].priority}}\n</speak>",
+        "play": null,
+        "voice": "Polly.Salli",
+        "language": "en-US",
+        "loop": 1
+      },
+      "transitions": [
+        {
+          "event": "audioComplete",
+          "conditions": [],
+          "next": "FF342a229b21a016c505caeece5f3e3fe4",
+          "uuid": "857cef4c-992b-48c5-81f9-e22facaaaa66"
+        }
+      ],
+      "sid": "FFcbbf791873001e621227c3509058542f"
+    },
+    {
+      "type": "Branch",
+      "name": "TicketOnHold",
+      "properties": {
+        "offset": {
+          "x": -890,
+          "y": 2000
+        },
+        "input": "{{flow.variables.TicketOnHold}}"
+      },
+      "transitions": [
+        {
+          "event": "noMatch",
+          "conditions": [],
+          "next": null,
+          "uuid": "cee034ff-2858-44b4-897b-3238b376901a"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "Not On Hold",
+              "type": "equal_to",
+              "arguments": ["{{flow.variables.TicketOnHold}}"],
+              "value": "false"
+            }
+          ],
+          "next": "FFcbbf791873001e621227c3509058542f",
+          "uuid": "b721c732-cea4-4af6-b784-04078afcca18"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "On Hold",
+              "type": "equal_to",
+              "arguments": ["{{flow.variables.TicketOnHold}}"],
+              "value": "true"
+            }
+          ],
+          "next": "FF029213104e478d626c0f2acaea8a69f9",
+          "uuid": "d62a275c-4641-4427-adfd-ddd8cd39abab"
+        }
+      ],
+      "sid": "FFa90c65db4512d8980219a20478ea5653"
+    },
+    {
+      "type": "Gather",
+      "name": "GetOnHoldResponse",
+      "properties": {
+        "offset": {
+          "x": -680,
+          "y": 2280
+        },
+        "timeout": 5,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "number_of_digits": 1,
+        "save_response_as": null,
+        "say": "<speak>\n{% assign var_index = flow.variables.ticketIndex| minus: 0 %}\nYour ticket is currently {{widgets.GetUserFromPhone.parsed.result.tickets[var_index].state}} and has a priority of {{widgets.GetUserFromPhone.parsed.result.tickets[var_index].priority}}. The last comment from the technician was {{widgets.GetUserFromPhone.parsed.result.tickets[var_index].last_comment}}. To respond to this comment press 1 otherwise press 2\n</speak>",
+        "play": null,
+        "voice": "Polly.Salli",
+        "language": "en-US",
+        "loop": 1,
+        "hints": null,
+        "gather_language": "en"
+      },
+      "transitions": [
+        {
+          "event": "keypress",
+          "conditions": [],
+          "next": "FF7a5d631f2b7c6492ef725151353e8ebb",
+          "uuid": "e825cceb-c566-4099-af26-be1d13404682"
+        },
+        {
+          "event": "speech",
+          "conditions": [],
+          "next": null,
+          "uuid": "fb66586f-08ad-44b7-8143-d42ad24dd5dd"
+        },
+        {
+          "event": "timeout",
+          "conditions": [],
+          "next": null,
+          "uuid": "df7f2610-e3fb-43cc-8a38-9dc8d1a700c6"
+        }
+      ],
+      "sid": "FF029213104e478d626c0f2acaea8a69f9"
+    },
+    {
+      "type": "Branch",
+      "name": "SplitOnHoldResponse",
+      "properties": {
+        "offset": {
+          "x": -670,
+          "y": 2530
+        },
+        "input": "{{widgets.GetOnHoldResponse.Digits}}"
+      },
+      "transitions": [
+        {
+          "event": "noMatch",
+          "conditions": [],
+          "next": null,
+          "uuid": "f179bceb-ac8b-4a06-b1f8-28acf70db77f"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "Get Response",
+              "type": "equal_to",
+              "arguments": ["{{widgets.GetOnHoldResponse.Digits}}"],
+              "value": "1"
+            }
+          ],
+          "next": "FFf266aadacd4d4f53e4ec62a1c066f821",
+          "uuid": "0730f2b1-e727-4710-b2d1-06301e8dae8e"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "Does not wish to leave a response",
+              "type": "equal_to",
+              "arguments": ["{{widgets.GetOnHoldResponse.Digits}}"],
+              "value": "2"
+            }
+          ],
+          "next": "FF342a229b21a016c505caeece5f3e3fe4",
+          "uuid": "7915d9b5-cbb3-424e-8c1e-77326e0f63f1"
+        }
+      ],
+      "sid": "FF7a5d631f2b7c6492ef725151353e8ebb"
+    },
+    {
+      "type": "SayPlay",
+      "name": "PlayBeep",
+      "properties": {
+        "offset": {
+          "x": -190,
+          "y": 2780
+        },
+        "say": "<speak>\nPlease speak your response after the tone <break time=\"500ms\"/> </speak>",
+        "play": null,
+        "voice": "Polly.Salli",
+        "language": "en-US",
+        "loop": 1
+      },
+      "transitions": [
+        {
+          "event": "audioComplete",
+          "conditions": [],
+          "next": "FFc05f059a2586e494c7b9c6313ce1046c",
+          "uuid": "04646b2b-7c04-4095-b04c-3402a27fc8c6"
+        }
+      ],
+      "sid": "FFf266aadacd4d4f53e4ec62a1c066f821"
+    },
+    {
+      "type": "Gather",
+      "name": "Response",
+      "properties": {
+        "offset": {
+          "x": -160,
+          "y": 3010
+        },
+        "timeout": 5,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "number_of_digits": null,
+        "save_response_as": null,
+        "say": null,
+        "play": "https://puce-partridge-9268.twil.io/assets/Answering%20Machine%20Beep-SoundBible.com-1804176620.mp3",
+        "voice": "alice",
+        "language": "en",
+        "loop": 1,
+        "hints": null,
+        "gather_language": "en-US"
+      },
+      "transitions": [
+        {
+          "event": "keypress",
+          "conditions": [],
+          "next": null,
+          "uuid": "39de0e10-dca1-483b-8c7f-d0338f2bdb90"
+        },
+        {
+          "event": "speech",
+          "conditions": [],
+          "next": "FF6b4c23809b7a3374a8496e8073c9cd61",
+          "uuid": "206e90cc-0103-41a6-8293-0ff4edb297f5"
+        },
+        {
+          "event": "timeout",
+          "conditions": [],
+          "next": null,
+          "uuid": "3b140f1a-ce49-4176-86f4-60514a2542bd"
+        }
+      ],
+      "sid": "FFc05f059a2586e494c7b9c6313ce1046c"
+    },
+    {
+      "type": "Branch",
+      "name": "SplitThanks",
+      "properties": {
+        "offset": {
+          "x": -810,
+          "y": 3900
+        },
+        "input": "{{widgets.PlayThanks.Digits}}"
+      },
+      "transitions": [
+        {
+          "event": "noMatch",
+          "conditions": [],
+          "next": null,
+          "uuid": "a39701f0-8759-4bee-a6bb-17cab2b473a5"
+        },
+        {
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "Speak to agent",
+              "type": "equal_to",
+              "arguments": ["{{widgets.PlayThanks.Digits}}"],
+              "value": "1"
+            }
+          ],
+          "next": "FFdf570154bfbd9e7badca73a4674919f8",
+          "uuid": "bd72568b-5fce-4135-bf43-b9e6d2066eff"
+        }
+      ],
+      "sid": "FF6af76cdc8b4d7e349510a998647fc711"
+    },
+    {
+      "type": "Gather",
+      "name": "PlayThanks",
+      "properties": {
+        "offset": {
+          "x": -810,
+          "y": 3670
+        },
+        "timeout": 5,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "number_of_digits": 1,
+        "save_response_as": null,
+        "say": "<speak>\nIf you would still like to speak to an agent please press 1 otherwise you will be disconnected<break time=\"500ms\"/> </speak>",
+        "play": null,
+        "voice": "Polly.Salli",
+        "language": "en-US",
+        "loop": 1,
+        "hints": null,
+        "gather_language": "en"
+      },
+      "transitions": [
+        {
+          "event": "keypress",
+          "conditions": [],
+          "next": "FF6af76cdc8b4d7e349510a998647fc711",
+          "uuid": "827990f2-31c1-4df6-a4a3-489ba1fe814a"
+        },
+        {
+          "event": "speech",
+          "conditions": [],
+          "next": null,
+          "uuid": "8fff9a18-2d56-4e76-863c-16c42f624048"
+        },
+        {
+          "event": "timeout",
+          "conditions": [],
+          "next": null,
+          "uuid": "c991ebfe-aab7-4240-8788-2b519bd7f4b6"
+        }
+      ],
+      "sid": "FF342a229b21a016c505caeece5f3e3fe4"
+    },
+    {
+      "type": "SayPlay",
+      "name": "MessageConfirmation",
+      "properties": {
+        "offset": {
+          "x": -160,
+          "y": 3450
+        },
+        "say": "Thank you, this message will be added to the ticket.",
+        "play": null,
+        "voice": "Polly.Salli",
+        "language": "en-US",
+        "loop": 1
+      },
+      "transitions": [
+        {
+          "event": "audioComplete",
+          "conditions": [],
+          "next": "FF342a229b21a016c505caeece5f3e3fe4",
+          "uuid": "5ef89f05-3fcf-4033-8fde-e41bfc3aba4c"
+        }
+      ],
+      "sid": "FF44bb7a242b6e63461d22473fa7240597"
+    },
+    {
+      "type": "Function",
+      "name": "AddCommentToTicket",
+      "properties": {
+        "offset": {
+          "x": -160,
+          "y": 3240
+        },
+        "url": "https://twil.io/add_comment",
+        "timeout": null,
+        "parameters": [
+          {
+            "key": "ticketNumber",
+            "value": "{{flow.variables.TicketNumber}}"
+          },
+          {
+            "key": "comment",
+            "value": "{{widgets.Response.SpeechResult}}"
+          }
+        ]
+      },
+      "transitions": [
+        {
+          "event": "success",
+          "conditions": [],
+          "next": "FF44bb7a242b6e63461d22473fa7240597",
+          "uuid": "16818df0-08c2-4467-bc8e-b9202e0021df"
+        },
+        {
+          "event": "fail",
+          "conditions": [],
+          "next": null,
+          "uuid": "a76d5a0e-4a66-484f-bea0-acdb418e28e3"
+        }
+      ],
+      "sid": "FF6b4c23809b7a3374a8496e8073c9cd61"
+    }
+  ]
+}
