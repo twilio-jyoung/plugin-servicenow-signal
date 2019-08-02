@@ -36,16 +36,19 @@ export default class ServicenowSignalPlugin extends FlexPlugin {
     // create an action to handle forwarding all events to ServiceNow through Twilio Functions
     flex.Actions.registerAction("ForwardEventToServiceNow", payload => {
       const url = runtimeDomain + "/task_event";
+
+      let data = {
+        "worker": payload.task.source._worker.attributes,
+        "task": {
+          "sid": payload.task.sid,
+          "attributes": payload.task.attributes
+        },
+        "eventType": payload.eventType
+      };
+
       const options = {
         method: "POST",
-        body: JSON.stringify({
-          worker: payload.task.source._worker.attributes,
-          task: {
-            sid: payload.task.sid,
-            attributes: payload.task.attributes
-          },
-          eventType: payload.eventType
-        }),
+        body: JSON.stringify(data),
         headers: {
           "Content-Type": "application/json"
         }
