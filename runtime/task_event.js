@@ -5,13 +5,13 @@
 const got = require("got");
 
 exports.handler = function(context, event, callback) {
-  const response = new Twilio.Response();
+  let response = new Twilio.Response();
   response.appendHeader("Access-Control-Allow-Origin", "*");
   response.appendHeader("Access-Control-Allow-Methods", "OPTIONS POST GET");
   response.appendHeader("Access-Control-Allow-Headers", "Content-Type");
 
   got
-    .post(context.ServiceNowScriptedAPIRootURL + "status", {
+    .post(context.ServiceNowScriptedAPIRootURL + "status_v2", {
       body: JSON.stringify(event),
       headers: {
         "Accept": "application/json",
